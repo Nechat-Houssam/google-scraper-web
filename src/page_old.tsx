@@ -6,14 +6,14 @@ import { useScanner } from '@/hooks/useScanner'
 import { Header } from '@/components/layout/Header'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { DragBoard } from '@/components/features/DragBoard'
+// On garde tes imports utiles, mais on vire le DND ici
+import { Play, ServerCog, Database, AlignLeft } from 'lucide-react'
 
 export default function Home() {
-  // 1. Sécurité anti-erreur d'hydratation (essentiel pour @hello-pangea/dnd)
   const [hasMounted, setHasMounted] = useState(false)
 
-  // 2. Initialisation de tes hooks personnalisés
+  // Initialisation de ta logique métier via les hooks
   const { status, setStatus, loading, handleScanAction } = useScanner()
-  
   const {
     availableLocGroups, setAvailableLocGroups,
     availableKwGroups, setAvailableKwGroups,
@@ -23,30 +23,25 @@ export default function Home() {
     removeItem
   } = useGroups(setStatus)
 
-  // 3. On attend que le client soit prêt
+  // Sécurité indispensable pour Next.js (évite les erreurs d'hydratation)
   useEffect(() => {
     setHasMounted(true)
   }, [])
 
-  // On ne rend rien tant que le navigateur n'a pas pris la main
   if (!hasMounted) return null
 
   return (
-    <main className="p-8 max-w-7xl mx-auto bg-gray-50 min-h-screen font-sans text-gray-900">
-      
-      {/* Barre d'outils et bouton Scan */}
+    <main className="p-8 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      {/* Composant Header qui gère les boutons d'action */}
       <Header 
         loading={loading} 
         onScanAction={(action) => handleScanAction(action, locations, keywords)} 
       />
+
+      {/* Barre de progression ou message d'état */}
+      <StatusBar status={status} loading={loading} />
       
-      {/* Messages d'état (Succès/Erreur/Info) */}
-      <StatusBar 
-        status={status} 
-        loading={loading} 
-      />
-      
-      {/* Le plateau de Drag & Drop avec toutes les fonctionnalités restaurées */}
+      {/* Nouveau plateau de jeu qui utilisera dnd-kit */}
       <DragBoard 
         availableLocGroups={availableLocGroups}
         setAvailableLocGroups={setAvailableLocGroups}
@@ -60,7 +55,6 @@ export default function Home() {
         removeItem={removeItem}
         setStatus={setStatus}
       />
-      
     </main>
   )
 }
