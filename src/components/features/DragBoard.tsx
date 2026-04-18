@@ -70,10 +70,13 @@ export const DragBoard = ({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      {/* On utilise items-stretch (par défaut en grid) pour que les 3 colonnes 
+         aient la même hauteur totale 
+      */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
         
         {/* COLONNE 1 : BIBLIOTHÈQUE */}
-        <section className="space-y-6">
+        <section className="flex flex-col gap-6">
           <GroupCreator setStatus={setStatus} onGroupCreated={(it: any) => it.type === 'location' ? setAvailableLocGroups((p: any) => [...p, it]) : setAvailableKwGroups((p: any) => [...p, it])} />
           
           <div className="space-y-4">
@@ -84,7 +87,7 @@ export const DragBoard = ({
                   {availableLocGroups.map((item: any, index: number) => (
                     <DraggableItem key={item.id} item={item} index={index} color="border-orange-100" />
                   ))}
-                  {provided.placeholder} {/* LE FANTÔME */}
+                  {provided.placeholder}
                 </div>
               )}
             </Droppable>
@@ -106,15 +109,21 @@ export const DragBoard = ({
         </section>
 
         {/* COLONNE 2 : VILLES CIBLES */}
-        <section className="space-y-4">
+        <section className="flex flex-col gap-4">
           <h2 className="text-sm font-black text-orange-600 uppercase">🎯 Villes Cibles</h2>
           <div className="flex gap-2 bg-white p-2 rounded-2xl shadow-sm">
             <input value={manualLoc} onChange={e => setManualLoc(e.target.value)} onKeyDown={e => e.key === 'Enter' && (addManualItem('location', manualLoc), setManualLoc(''))} className="flex-1 p-2 outline-none text-sm" placeholder="Ajouter ville..." />
             <button onClick={() => { addManualItem('location', manualLoc); setManualLoc(''); }} className="bg-orange-500 text-white p-2 rounded-xl"><Plus /></button>
           </div>
+          
           <Droppable droppableId="locations">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="bg-orange-50/50 border-2 border-orange-100 rounded-3xl p-5 min-h-[500px]">
+              /* flex-1 ici fait en sorte que ce bloc s'étire jusqu'en bas */
+              <div 
+                {...provided.droppableProps} 
+                ref={provided.innerRef} 
+                className="flex-1 bg-orange-50/50 border-2 border-orange-100 rounded-3xl p-5 min-h-[400px]"
+              >
                 {locations.map((item: any, index: number) => (
                   <DraggableItem key={item.id} item={item} index={index} color="border-orange-200" onRemove={() => removeItem(item.id, 'locations')} />
                 ))}
@@ -125,15 +134,21 @@ export const DragBoard = ({
         </section>
 
         {/* COLONNE 3 : MOTS-CLÉS CIBLES */}
-        <section className="space-y-4">
+        <section className="flex flex-col gap-4">
           <h2 className="text-sm font-black text-blue-600 uppercase">🎯 Mots-Clés</h2>
           <div className="flex gap-2 bg-white p-2 rounded-2xl shadow-sm">
             <input value={manualKw} onChange={e => setManualKw(e.target.value)} onKeyDown={e => e.key === 'Enter' && (addManualItem('keyword', manualKw), setManualKw(''))} className="flex-1 p-2 outline-none text-sm" placeholder="Ajouter mot..." />
             <button onClick={() => { addManualItem('keyword', manualKw); setManualKw(''); }} className="bg-blue-500 text-white p-2 rounded-xl"><Plus /></button>
           </div>
+          
           <Droppable droppableId="keywords">
             {(provided) => (
-              <div {...provided.droppableProps} ref={provided.innerRef} className="bg-blue-50/50 border-2 border-blue-100 rounded-3xl p-5 min-h-[500px]">
+              /* flex-1 ici aussi pour l'alignement */
+              <div 
+                {...provided.droppableProps} 
+                ref={provided.innerRef} 
+                className="flex-1 bg-blue-50/50 border-2 border-blue-100 rounded-3xl p-5 min-h-[400px]"
+              >
                 {keywords.map((item: any, index: number) => (
                   <DraggableItem key={item.id} item={item} index={index} color="border-blue-200" onRemove={() => removeItem(item.id, 'keywords')} />
                 ))}
@@ -142,6 +157,7 @@ export const DragBoard = ({
             )}
           </Droppable>
         </section>
+
       </div>
     </DragDropContext>
   );
