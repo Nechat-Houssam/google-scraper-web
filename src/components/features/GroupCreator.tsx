@@ -1,133 +1,102 @@
 import { useState } from 'react';
-import { X, Plus } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { ListItem } from '@/types';
+import { ActionCard } from '@/components/ui/ActionCard';
+import { groupService } from '@/services/batch.service';
 
-interface GroupCreatorProps {
-  setStatus: (msg: string) => void;
-  onGroupCreated: (item: ListItem) => void;
-}
-
-export const GroupCreator = ({ setStatus, onGroupCreated }: GroupCreatorProps) => {
+export const GroupCreator = ({ onGroupCreated, setStatus }: any) => {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupType, setNewGroupType] = useState<'location' | 'keyword'>('location');
-  const [newGroupTags, setNewGroupTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
+  const [newItemText, setNewItemText] = useState('');
+  const [newGroupItems, setNewGroupItems] = useState<string[]>([]);
 
-  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  // Ajout de mots dans les blocs
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && newItemText.trim() !== '') {
       e.preventDefault();
-      const val = tagInput.trim();
-      if (val && !newGroupTags.includes(val)) {
-        setNewGroupTags([...newGroupTags, val]);
+      if (!newGroupItems.includes(newItemText.trim())) {
+        setNewGroupItems([...newGroupItems, newItemText.trim()]);
       }
-      setTagInput('');
+      setNewItemText('');
     }
   };
 
-  const handleTagPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const paste = e.clipboardData.getData('text');
-    const words = paste.split(/[\n,]+/).map(w => w.trim()).filter(w => w !== '');
-    const uniqueWords = words.filter(w => !newGroupTags.includes(w));
-    if (uniqueWords.length > 0) {
-      setNewGroupTags([...newGroupTags, ...uniqueWords]);
-    }
+  const handleRemovePendingItem = (indexToRemove: number) => {
+    setNewGroupItems(prev => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setNewGroupTags(newGroupTags.filter(tag => tag !== tagToRemove));
-  };
-
-  const createGroup = async () => {
-    if (!newGroupName.trim() || newGroupTags.length === 0) {
-      setStatus("❌ Il faut un nom ET au moins une valeur.");
-      return;
-    }
-
-    setStatus("⏳ Création du groupe et insertion des données...");
-    const slug = newGroupName.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
-
+  // Création en base de données
+  const handleCreateGroup = async () => {
     try {
-      const { data: groupData, error: groupError } = await supabase
-        .from('groups')
-        .insert([{ name: newGroupName.trim(), type: newGroupType, slug }])
-        .select();
+      setStatus("⏳ Sauvegarde du groupe en base...");
+      
+      const newGroup = await groupService.createGroup(newGroupName, newGroupType, newGroupItems);
 
-      if (groupError) throw groupError;
+      const uiGroup = {
+        id: newGroup.id,
+        type: newGroup.type,
+        content: newGroup.name,
+      };
 
-      if (groupData && groupData.length > 0) {
-        const groupId = groupData[0].id;
-        const insertPayload = newGroupTags.map(val => ({ group_id: groupId, value: val }));
+      // On prévient le parent (DragBoard) que c'est prêt
+      onGroupCreated(uiGroup, newGroupType);
 
-        const { error: itemsError } = await supabase.from('group_items').insert(insertPayload);
-        if (itemsError) throw itemsError;
-
-        const formattedItem: ListItem = {
-          id: `group:${groupData[0].slug}`,
-          content: `${groupData[0].type === 'location' ? '📍' : '🔑'} ${groupData[0].name}`,
-          type: groupData[0].type as 'location' | 'keyword',
-          items: newGroupTags
-        };
-
-        onGroupCreated(formattedItem); // On renvoie l'item au parent !
-        setNewGroupName('');
-        setNewGroupTags([]);
-        setTagInput('');
-        setStatus(`✅ Groupe "${newGroupName}" créé avec ${newGroupTags.length} éléments.`);
-      }
-    } catch (err) {
-      console.error(err);
-      setStatus("❌ Erreur lors de la création du groupe.");
+      setStatus("✅ Groupe créé et sauvegardé !");
+      setNewGroupName('');
+      setNewGroupItems([]);
+      
+    } catch (error) {
+      console.error(error);
+      setStatus("❌ Erreur lors de la sauvegarde du groupe.");
     }
   };
 
   return (
-    <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-      <h2 className="text-xs font-black uppercase tracking-widest text-gray-400">🆕 Créer un Groupe</h2>
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-2">
-          <select 
-            value={newGroupType}
-            onChange={e => setNewGroupType(e.target.value as 'location' | 'keyword')}
-            className="w-1/3 bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-900 outline-none cursor-pointer"
-          >
-            <option value="location">📍 Ville</option>
-            <option value="keyword">🔑 Mot-clé</option>
-          </select>
-          <input 
-            value={newGroupName}
-            onChange={e => setNewGroupName(e.target.value)}
-            placeholder="Nom du groupe..."
-            className="flex-1 bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-900 placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {newGroupTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 bg-gray-50/50 p-3 rounded-xl border border-gray-100 max-h-32 overflow-y-auto">
-              {newGroupTags.map(tag => (
-                <div key={tag} className="flex items-center gap-1 bg-white border border-gray-200 px-3 py-1 rounded-lg shadow-sm text-sm font-medium text-gray-700">
-                  {tag}
-                  <button onClick={() => removeTag(tag)} className="text-gray-400 hover:text-red-500 transition-colors ml-1"><X size={14} /></button>
-                </div>
-              ))}
-            </div>
-          )}
-          <input 
-            value={tagInput}
-            onChange={e => setTagInput(e.target.value)}
-            onKeyDown={handleTagKeyDown}
-            onPaste={handleTagPaste}
-            placeholder="Tapez un mot et appuyez sur Entrée..."
-            className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm text-gray-900 placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-        </div>
-        
-        <button onClick={createGroup} className="bg-gray-900 text-white p-3 rounded-xl hover:bg-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 font-bold">
-          <Plus size={18} /> Enregistrer le groupe
-        </button>
+    <ActionCard 
+      title="CRÉER UN GROUPE" 
+      icon="🆕" 
+      buttonText="Enregistrer le groupe" 
+      onAction={handleCreateGroup} 
+      disabled={!newGroupName || newGroupItems.length === 0}
+    >
+      <div className="flex gap-4">
+        <select 
+          value={newGroupType} 
+          onChange={(e: any) => setNewGroupType(e.target.value)} 
+          className="p-4 rounded-2xl bg-slate-50 border-none font-medium outline-none w-32 text-slate-900 shadow-inner"
+        >
+          <option value="location">📍 Ville</option>
+          <option value="keyword">🔑 Mot</option>
+        </select>
+        <input 
+          value={newGroupName} 
+          onChange={(e) => setNewGroupName(e.target.value)} 
+          className="flex-1 p-4 rounded-2xl bg-slate-50 border-none font-medium outline-none text-slate-900 placeholder:text-slate-400 shadow-inner" 
+          placeholder="Nom du groupe..." 
+        />
       </div>
-    </div>
+
+      <input 
+        value={newItemText}
+        onChange={(e) => setNewItemText(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="w-full mt-4 p-4 rounded-2xl bg-slate-50 border-none font-medium outline-none text-slate-900 placeholder:text-slate-400 shadow-inner" 
+        placeholder="Tapez un mot et appuyez sur Entrée..." 
+      />
+
+      {newGroupItems.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 min-h-[60px]">
+          {newGroupItems.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm text-sm font-medium text-slate-700">
+              {item}
+              <button 
+                onClick={() => handleRemovePendingItem(idx)}
+                className="text-slate-400 hover:text-red-500 font-bold transition-colors"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </ActionCard>
   );
 };
