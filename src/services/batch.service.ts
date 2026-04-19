@@ -26,31 +26,38 @@ export const batchService = {
 
 export const groupService = {
   async deleteGroup(groupId: string) {
-    // 1. On nettoie l'ID (on enlève "group:", "loc:", etc.)
+    // 1. On nettoie le préfixe (ex: "group:le-gorupe" devient "le-gorupe")
     const cleanValue = groupId.includes(':') ? groupId.split(':')[1] : groupId;
 
-    console.log("🚀 Tentative de suppression pour :", cleanValue);
-
-    // 2. On tente de supprimer :
-    // - Soit là où l'ID correspond (si cleanValue est un UUID)
-    // - Soit là où le NAME correspond (puisque ton interface semble utiliser le nom)
-    
-    // On utilise une petite ruse : si cleanValue ressemble à un UUID, on check l'ID, 
-    // sinon on check le nom.
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanValue);
 
-    const query = isUUID 
-      ? supabase.from('groups').delete().eq('id', cleanValue)
-      : supabase.from('groups').delete().eq('name', cleanValue);
+    let query;
 
-    const { error, count } = await query;
+    if (isUUID) {
+      // Cas A : C'est un vrai ID
+      query = supabase.from('groups').delete().eq('id', cleanValue).select();
+    } else {
+      // Cas B : C'est un nom transformé. 
+      // On remplace les tirets par des espaces ("le-gorupe" -> "le gorupe")
+      const searchName = cleanValue.replace(/-/g, ' ');
+      
+      // On utilise .ilike() pour ignorer la casse ("le gorupe" matchera "Le gorupe")
+      query = supabase.from('groups').delete().ilike('name', searchName).select();
+    }
+
+    const { data, error } = await query;
 
     if (error) {
-      console.error("❌ Erreur Supabase lors de la suppression:", error);
+      console.error("❌ Erreur SQL:", error);
       throw error;
     }
 
-    console.log("✅ Suppression réussie en base de données.");
+    if (!data || data.length === 0) {
+      console.error("⚠️ La ligne n'a pas été trouvée en base (ou RLS bloque).", { searchName: cleanValue.replace(/-/g, ' ') });
+      throw new Error("Aucune ligne supprimée");
+    }
+
+    console.log("✅ Ligne(s) supprimée(s) :", data);
     return true;
   }
 };
