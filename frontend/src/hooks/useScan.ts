@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { ListItem } from '@/types';
 import { apiClient } from '@/services/api.client';
 
-export const useScanner = () => {
+export const useScan = (setStatus: (msg: string) => void) => {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState("Connexion...");
 
   const handleScanAction = async (
     action: 'start' | 'stop',
@@ -21,23 +20,23 @@ export const useScanner = () => {
       try {
         const data = await apiClient.startScan(locations, keywords);
         setStatus(data.status === 'cancelled'
-          ? "🛑 Annulation confirmée."
+          ? "🛑 Annulation confirmée. Aucune donnée enregistrée."
           : `✅ ${data.message}`
         );
       } catch {
-        setStatus("❌ Erreur de connexion");
+        setStatus("❌ Erreur de connexion au serveur.");
       } finally {
         setLoading(false);
       }
     } else {
+      setStatus("🛑 Demande d'arrêt envoyée...");
       try {
         await apiClient.stopScan();
-        setStatus("🛑 Arrêt demandé...");
       } catch {
-        setStatus("❌ Erreur d'arrêt");
+        setStatus("❌ Impossible de joindre le bot.");
       }
     }
   };
 
-  return { loading, status, setStatus, handleScanAction };
+  return { loading, handleScanAction };
 };

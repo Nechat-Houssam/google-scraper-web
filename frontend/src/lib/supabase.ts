@@ -1,12 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// L'astuce magique pour Next.js (Singleton)
-const globalForSupabase = global as unknown as { supabase: ReturnType<typeof createClient> };
+const globalForSupabase = global as unknown as { supabase: ReturnType<typeof createClient<Database>> };
 
-export const supabase = globalForSupabase.supabase || createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = globalForSupabase.supabase || createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 if (process.env.NODE_ENV !== 'production') {
   globalForSupabase.supabase = supabase;

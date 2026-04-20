@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActionCard } from '@/components/ui/ActionCard';
 import { groupService } from '@/services/group.service';
 import { useTracker } from '@/context/TrackerContext';
+import { ListItem } from '@/types';
 
 export const GroupCreator = () => {
   const { setStatus, setAvailableLocGroups, setAvailableKwGroups } = useTracker();
@@ -22,11 +23,17 @@ export const GroupCreator = () => {
     try {
       setStatus("⏳ Sauvegarde...");
       const newGroup = await groupService.createGroup(newGroupName, newGroupType, newGroupItems);
-      const uiGroup = { id: `group:${newGroup.slug}`, type: newGroup.type, content: (newGroupType === 'location' ? '📍 ' : '🔑 ') + newGroup.name, items: newGroupItems };
+      const uiGroup: ListItem = {
+        id: `group:${newGroup.slug}`,
+        type: (newGroup.type ?? newGroupType) as 'location' | 'keyword',
+        content: (newGroupType === 'location' ? '📍 ' : '🔑 ') + newGroup.name,
+        items: newGroupItems
+      };
       if (newGroupType === 'location') setAvailableLocGroups(prev => [...prev, uiGroup]);
       else setAvailableKwGroups(prev => [...prev, uiGroup]);
       setStatus("✅ Groupe sauvegardé !");
-      setNewGroupName(''); setNewGroupItems([]);
+      setNewGroupName('');
+      setNewGroupItems([]);
     } catch (error: any) {
       setStatus(error.message === "ALREADY_EXISTS" ? "❌ Ce nom existe déjà." : "❌ Erreur création.");
     }
