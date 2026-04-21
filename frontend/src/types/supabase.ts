@@ -91,6 +91,50 @@ export type Database = {
         }
         Relationships: []
       }
+      scan_jobs: {
+        Row: {
+          id: string
+          user_id: string | null
+          batch_id: string | null
+          status: string
+          payload: Json | null
+          error: string | null
+          created_at: string | null
+          started_at: string | null
+          finished_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          batch_id?: string | null
+          status?: string
+          payload?: Json | null
+          error?: string | null
+          created_at?: string | null
+          started_at?: string | null
+          finished_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          batch_id?: string | null
+          status?: string
+          payload?: Json | null
+          error?: string | null
+          created_at?: string | null
+          started_at?: string | null
+          finished_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scan_jobs_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "scraper_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scraper_batches: {
         Row: {
           config: Json
