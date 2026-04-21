@@ -46,18 +46,21 @@ export type Database = {
           name: string
           slug: string
           type: string | null
+          user_id: string | null
         }
         Insert: {
           id?: string
           name: string
           slug: string
           type?: string | null
+          user_id?: string | null
         }
         Update: {
           id?: string
           name?: string
           slug?: string
           type?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
