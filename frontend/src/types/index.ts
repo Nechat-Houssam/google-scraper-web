@@ -28,3 +28,18 @@ export interface Ranking {
   position: number | null
   job_id: string | null
 }
+
+export interface ScraperBatch {
+  id: string
+  name: string
+  config: {
+    locationGroups: { id: string; content: string }[]
+    keywordGroups:  { id: string; content: string }[]
+  }
+  schedule_type: 'daily' | 'weekly' | 'manual'
+  is_active: boolean
+  created_at: string
+  last_run_at: string | null
+  next_run_at: string | null
+  user_id: string | null
+}

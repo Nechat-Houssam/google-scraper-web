@@ -37,6 +37,19 @@ export const groupService = {
     return newGroup;
   },
 
+  async getGroups(type: 'location' | 'keyword') {
+    const { data } = await supabase
+      .from('groups')
+      .select('id, name, slug, type')
+      .eq('type', type)
+      .order('name');
+    return (data ?? []).map(g => ({
+      id: `group:${g.slug}`,
+      content: g.name,
+      type: g.type as 'location' | 'keyword',
+    }));
+  },
+
   async deleteGroup(groupId: string) {
     const cleanValue = groupId.includes(':') ? groupId.split(':')[1] : groupId;
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanValue);

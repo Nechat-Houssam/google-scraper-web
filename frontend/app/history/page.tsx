@@ -76,7 +76,13 @@ export default function HistoryPage() {
                   className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all text-left flex items-center justify-between gap-4"
                 >
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
-                    <span className="font-bold text-gray-900 truncate">{batchName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-gray-900 truncate">{batchName}</span>
+                      {job.batch_id
+                        ? <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-black bg-green-100 text-green-700">Auto</span>
+                        : <span className="shrink-0 px-2 py-0.5 rounded-lg text-[10px] font-black bg-gray-100 text-gray-500">Manuel</span>
+                      }
+                    </div>
                     <span className="text-xs text-gray-400">
                       {locs} ville{locs > 1 ? 's' : ''} · {kws} mot{kws > 1 ? 's' : ''}-clé{kws > 1 ? 's' : ''}
                     </span>

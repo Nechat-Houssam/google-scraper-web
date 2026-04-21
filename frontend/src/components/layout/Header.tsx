@@ -1,5 +1,5 @@
 'use client'
-import { Play, ServerCog, Database, X, History, LogOut } from 'lucide-react'
+import { Play, ServerCog, Database, X, History, LogOut, Bot } from 'lucide-react'
 import Link from 'next/link'
 import { useTracker } from '@/context/TrackerContext'
 import { useAuth } from '@/context/AuthContext'
@@ -21,6 +21,13 @@ export const Header = () => {
       </div>
 
       <div className="flex items-center gap-3">
+        <Link
+          href="/batches"
+          className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-gray-200 bg-white text-violet-600 font-bold text-sm hover:bg-gray-50 transition-all"
+        >
+          <Bot size={16} /> Planifier
+        </Link>
+
         <Link
           href="/history"
           className="flex items-center gap-2 px-5 py-3 rounded-2xl border border-gray-200 bg-white text-gray-700 font-bold text-sm hover:bg-gray-50 transition-all"
