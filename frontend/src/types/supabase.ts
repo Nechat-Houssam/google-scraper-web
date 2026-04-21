@@ -66,6 +66,9 @@ export type Database = {
           date: string | null
           heure: string | null
           id: string
+          job_id: string | null
+          batch_id: string | null
+          user_id: string | null
           keyword: string | null
           nom: string | null
           position: number | null
@@ -75,6 +78,9 @@ export type Database = {
           date?: string | null
           heure?: string | null
           id?: string
+          job_id?: string | null
+          batch_id?: string | null
+          user_id?: string | null
           keyword?: string | null
           nom?: string | null
           position?: number | null
@@ -84,6 +90,9 @@ export type Database = {
           date?: string | null
           heure?: string | null
           id?: string
+          job_id?: string | null
+          batch_id?: string | null
+          user_id?: string | null
           keyword?: string | null
           nom?: string | null
           position?: number | null
