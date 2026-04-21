@@ -11,3 +11,4 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 TARGET_RESULTS = int(os.getenv("TARGET_RESULTS", "20"))
 HEADLESS = os.getenv("HEADLESS", "false").lower() == "true"
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")

@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime
-from playwright.async_api import async_playwright
 
 from services.geo import get_gps
 from services.database import db_service
@@ -17,16 +16,25 @@ class ScanEngine:
     def reset(self):
         self._abort_event.clear()
 
-    async def run(self, locations: list[str], keywords: list[str]) -> dict:
+    async def run(
+        self,
+        locations: list[str],
+        keywords: list[str],
+        user_id: str = None,
+        batch_id: str = None,
+        job_id: str = None,
+    ) -> dict:
         self.reset()
         self.is_running = True
         all_results = []
         heure_ref = datetime.now().strftime("%H:%M:%S")
 
         print(f"\n🚀 SCAN DÉMARRÉ — {len(locations)} villes x {len(keywords)} mots-clés")
-        print(f"⏰ Heure de référence : {heure_ref}")
+        if job_id:
+            print(f"🔖 Job ID : {job_id}")
 
         try:
+            from playwright.async_api import async_playwright
             async with async_playwright() as p:
                 for loc in locations:
                     if self._abort_event.is_set():
@@ -51,7 +59,7 @@ class ScanEngine:
                     await browser.close()
 
             if all_results and not self._abort_event.is_set():
-                db_service.save_rankings(all_results)
+                db_service.save_rankings(all_results, user_id=user_id, batch_id=batch_id, job_id=job_id)
                 print(f"🎉 {len(all_results)} résultats enregistrés.")
                 return {"status": "success", "message": f"{len(all_results)} résultats enregistrés."}
 

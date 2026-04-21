@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+playwright
+playwright-stealth
+requests
+supabase
+python-dotenv
