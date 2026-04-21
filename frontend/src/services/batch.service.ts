@@ -30,7 +30,7 @@ export const batchService = {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return (data as ScraperBatch[]) ?? [];
+    return (data as unknown as ScraperBatch[]) ?? [];
   },
 
   async deleteBatch(id: string) {
